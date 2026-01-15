@@ -23,3 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Documentation and Helper Files (for pitching only, not for deployment)
+PITCH.md
+PRICING_GUIDE.md
+PRICING_BREAKDOWN.md
+FEATURES_SHOWCASE.md
+DEPLOYMENT_GUIDE.md
+DEPLOY_NOW.md
