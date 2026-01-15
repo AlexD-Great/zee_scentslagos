@@ -7,6 +7,7 @@ import About from './pages/About'
 import Contact from './pages/Contact'
 import AIFragranceFinder from './pages/AIFragranceFinder'
 import AdminDashboard from './pages/AdminDashboard'
+import CryptoPayment from './pages/CryptoPayment'
 
 function App() {
   return (
