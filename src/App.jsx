@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import DevSidebar from './components/DevSidebar'
 import Home from './pages/Home'
 import Products from './pages/Products'
 import ProductDetail from './pages/ProductDetail'
@@ -45,6 +46,7 @@ function App() {
         }}
       />
       <div className="min-h-screen flex flex-col">
+        <DevSidebar />
         <Navbar />
         <main className="flex-grow">
           <Routes>
