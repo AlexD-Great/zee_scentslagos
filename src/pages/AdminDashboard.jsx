@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { 
   BarChart3, Users, ShoppingBag, TrendingUp, Eye, 
-  Package, DollarSign, Calendar, Upload, Plus, Edit, Trash2
+  Package, DollarSign, Calendar, Upload, Plus, Edit, Trash2, ArrowRight
 } from 'lucide-react'
 
 const AdminDashboard = () => {
@@ -287,10 +288,25 @@ const AdminDashboard = () => {
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-semibold">Manage Inventory</h3>
-                  <button className="btn-primary flex items-center">
-                    <Plus className="w-5 h-5 mr-2" />
-                    Add New Product
-                  </button>
+                  <Link to="/admin/products" className="btn-primary flex items-center">
+                    <Package className="w-5 h-5 mr-2" />
+                    Manage Products
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Link>
+                </div>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                  <h4 className="font-semibold text-blue-900 mb-2">Full Product Management</h4>
+                  <p className="text-blue-800 mb-4">
+                    Upload product images, set prices, manage stock levels, and more from the dedicated product management page.
+                  </p>
+                  <Link 
+                    to="/admin/products" 
+                    className="inline-flex items-center text-blue-600 font-medium hover:text-blue-800"
+                  >
+                    Go to Product Management
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
                 </div>
 
                 <div className="overflow-x-auto">
