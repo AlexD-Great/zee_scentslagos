@@ -4,17 +4,18 @@ import { ArrowLeft, CreditCard, Truck, Shield, Loader, Check } from 'lucide-reac
 import useCartStore from '../store/useCartStore'
 import useAuthStore from '../store/useAuthStore'
 import toast from 'react-hot-toast'
+import { paymentsAPI } from '../utils/api'
 
 const Checkout = () => {
   const navigate = useNavigate()
   const { items, getSubtotal, getTax, getShipping, getTotal, clearCart } = useCartStore()
   const { user, isAuthenticated } = useAuthStore()
-  
+
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [orderComplete, setOrderComplete] = useState(false)
   const [orderId, setOrderId] = useState(null)
-  
+
   const [shippingData, setShippingData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -25,7 +26,7 @@ const Checkout = () => {
     state: '',
     zipCode: '',
   })
-  
+
   const [paymentMethod, setPaymentMethod] = useState('paystack')
 
   const formatPrice = (price) => {
@@ -62,43 +63,36 @@ const Checkout = () => {
 
   const handlePlaceOrder = async () => {
     setLoading(true)
-    
+
     try {
-      // Simulate order creation
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      const newOrderId = `ORD-${Date.now()}`
-      
-      // Save order to localStorage for demo
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]')
-      const newOrder = {
-        id: newOrderId,
-        items: items.map(item => ({
-          productId: item.product.id,
-          name: item.product.name,
-          price: item.price,
-          quantity: item.quantity,
-          image: item.product.image || item.product.images?.[0]
-        })),
-        shippingAddress: shippingData,
-        paymentMethod,
-        subtotal: getSubtotal(),
-        tax: getTax(),
-        shipping: getShipping(),
-        total: getTotal(),
-        status: 'pending',
-        createdAt: new Date().toISOString()
+      if (paymentMethod === 'paystack') {
+        const amount = getTotal()
+        const email = shippingData.email
+        const metadata = {
+          items: items.map(item => ({
+            name: item.product.name,
+            price: item.price,
+            quantity: item.quantity
+          })),
+          shippingData
+        }
+
+        const response = await paymentsAPI.initializePaystack({ email, amount, metadata })
+
+        if (response.data.status && response.data.data.authorization_url) {
+          // Store shipping data locally to rehydrate if needed or just rely on metadata
+          window.location.href = response.data.data.authorization_url
+        } else {
+          toast.error('Failed to initialize payment')
+        }
+      } else {
+        // ... (Simulate other methods or show unsupported)
+        toast.error('Only Paystack is fully implemented in this demo.')
       }
-      orders.push(newOrder)
-      localStorage.setItem('orders', JSON.stringify(orders))
-      
-      setOrderId(newOrderId)
-      setOrderComplete(true)
-      clearCart()
-      
-      toast.success('Order placed successfully!')
+
     } catch (error) {
-      toast.error('Failed to place order. Please try again.')
+      console.error('Checkout error:', error)
+      toast.error('Failed to process checkout. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -181,8 +175,8 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link 
-          to="/cart" 
+        <Link
+          to="/cart"
           className="inline-flex items-center text-gray-600 hover:text-primary-600 mb-6"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
@@ -192,9 +186,8 @@ const Checkout = () => {
         {/* Progress Steps */}
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-              step >= 1 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
-            }`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${step >= 1 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
+              }`}>
               1
             </div>
             <span className={`ml-2 font-medium ${step >= 1 ? 'text-primary-600' : 'text-gray-400'}`}>
@@ -203,9 +196,8 @@ const Checkout = () => {
           </div>
           <div className={`w-20 h-1 mx-4 ${step >= 2 ? 'bg-primary-600' : 'bg-gray-200'}`} />
           <div className="flex items-center">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-              step >= 2 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
-            }`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${step >= 2 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
+              }`}>
               2
             </div>
             <span className={`ml-2 font-medium ${step >= 2 ? 'text-primary-600' : 'text-gray-400'}`}>
@@ -223,7 +215,7 @@ const Checkout = () => {
                   <Truck className="w-6 h-6 mr-2 text-primary-600" />
                   Shipping Information
                 </h2>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -339,11 +331,10 @@ const Checkout = () => {
                   <CreditCard className="w-6 h-6 mr-2 text-primary-600" />
                   Payment Method
                 </h2>
-                
+
                 <div className="space-y-4">
-                  <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                    paymentMethod === 'paystack' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
-                  }`}>
+                  <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${paymentMethod === 'paystack' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}>
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -358,9 +349,8 @@ const Checkout = () => {
                     </div>
                   </label>
 
-                  <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                    paymentMethod === 'flutterwave' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
-                  }`}>
+                  <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${paymentMethod === 'flutterwave' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}>
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -375,9 +365,8 @@ const Checkout = () => {
                     </div>
                   </label>
 
-                  <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                    paymentMethod === 'crypto' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
-                  }`}>
+                  <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${paymentMethod === 'crypto' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}>
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -392,9 +381,8 @@ const Checkout = () => {
                     </div>
                   </label>
 
-                  <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                    paymentMethod === 'bank' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
-                  }`}>
+                  <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${paymentMethod === 'bank' ? 'border-primary-600 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}>
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -440,7 +428,7 @@ const Checkout = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
-              
+
               <div className="space-y-4 mb-6">
                 {items.map((item) => (
                   <div key={item.id} className="flex items-center gap-4">
