@@ -11,117 +11,12 @@ const Products = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [addingToCart, setAddingToCart] = useState(null)
-  
+
   const { addItem } = useCartStore()
 
   const categories = ['All', 'Men', 'Women', 'Unisex']
 
-  const defaultProducts = [
-    {
-      id: '1',
-      name: 'Midnight Rose',
-      category: 'Women',
-      price: 45000,
-      rating: 4.8,
-      reviewCount: 124,
-      image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=500&h=600&fit=crop',
-      images: ['https://images.unsplash.com/photo-1541643600914-78b084683601?w=500&h=600&fit=crop'],
-      description: 'A captivating blend of rose and vanilla',
-      inStock: true,
-      stockQuantity: 25
-    },
-    {
-      id: '2',
-      name: 'Ocean Breeze',
-      category: 'Men',
-      price: 50000,
-      rating: 4.9,
-      reviewCount: 98,
-      image: 'https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=500&h=600&fit=crop',
-      images: ['https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=500&h=600&fit=crop'],
-      description: 'Fresh aquatic notes with woody undertones',
-      inStock: true,
-      stockQuantity: 30
-    },
-    {
-      id: '3',
-      name: 'Golden Amber',
-      category: 'Unisex',
-      price: 55000,
-      rating: 4.7,
-      reviewCount: 156,
-      image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=500&h=600&fit=crop',
-      images: ['https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=500&h=600&fit=crop'],
-      description: 'Warm amber with hints of sandalwood',
-      inStock: true,
-      stockQuantity: 40
-    },
-    {
-      id: '4',
-      name: 'Lavender Dreams',
-      category: 'Women',
-      price: 42000,
-      rating: 4.6,
-      reviewCount: 87,
-      image: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59bd9?w=500&h=600&fit=crop',
-      images: ['https://images.unsplash.com/photo-1588405748880-12d1d2a59bd9?w=500&h=600&fit=crop'],
-      description: 'Soothing lavender with citrus notes',
-      inStock: true,
-      stockQuantity: 20
-    },
-    {
-      id: '5',
-      name: 'Black Oud',
-      category: 'Men',
-      price: 65000,
-      rating: 5.0,
-      reviewCount: 203,
-      image: 'https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=500&h=600&fit=crop',
-      images: ['https://images.unsplash.com/photo-1595425970377-c9703cf48b6d?w=500&h=600&fit=crop'],
-      description: 'Rich oud with spicy accents',
-      inStock: true,
-      stockQuantity: 15
-    },
-    {
-      id: '6',
-      name: 'Cherry Blossom',
-      category: 'Women',
-      price: 48000,
-      rating: 4.8,
-      reviewCount: 142,
-      image: 'https://images.unsplash.com/photo-1563170351-be82bc888aa4?w=500&h=600&fit=crop',
-      images: ['https://images.unsplash.com/photo-1563170351-be82bc888aa4?w=500&h=600&fit=crop'],
-      description: 'Delicate floral with fruity notes',
-      inStock: true,
-      stockQuantity: 35
-    },
-    {
-      id: '7',
-      name: 'Leather & Spice',
-      category: 'Men',
-      price: 58000,
-      rating: 4.7,
-      reviewCount: 91,
-      image: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&h=600&fit=crop',
-      images: ['https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&h=600&fit=crop'],
-      description: 'Bold leather with warm spices',
-      inStock: true,
-      stockQuantity: 28
-    },
-    {
-      id: '8',
-      name: 'Citrus Burst',
-      category: 'Unisex',
-      price: 40000,
-      rating: 4.5,
-      reviewCount: 76,
-      image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&h=600&fit=crop',
-      images: ['https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&h=600&fit=crop'],
-      description: 'Energizing citrus blend',
-      inStock: true,
-      stockQuantity: 50
-    }
-  ]
+
 
   useEffect(() => {
     fetchProducts()
@@ -138,30 +33,17 @@ const Products = () => {
     setLoading(true)
     try {
       // Try API first
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
       const response = await fetch(`${API_URL}/products`)
       if (response.ok) {
         const data = await response.json()
-        setProducts(data.products || data || [])
+        setProducts(data.products || [])
       } else {
-        throw new Error('API not available')
+        throw new Error('Failed to fetch products')
       }
     } catch (error) {
-      // Use localStorage (admin products) or defaults
-      const storedProducts = localStorage.getItem('adminProducts')
-      if (storedProducts) {
-        const adminProducts = JSON.parse(storedProducts)
-        // Merge admin products with defaults, admin products take priority
-        const merged = [...adminProducts]
-        defaultProducts.forEach(dp => {
-          if (!merged.find(p => p.id === dp.id)) {
-            merged.push(dp)
-          }
-        })
-        setProducts(merged.filter(p => p.inStock !== false))
-      } else {
-        setProducts(defaultProducts)
-      }
+      console.error('Error fetching products:', error)
+      toast.error('Failed to load products')
+      setProducts([])
     } finally {
       setLoading(false)
     }
@@ -187,7 +69,7 @@ const Products = () => {
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      product.description?.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesCategory && matchesSearch
   })
 
@@ -224,11 +106,10 @@ const Products = () => {
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-6 py-2 rounded-full font-medium transition-all ${
-                  selectedCategory === category
+                className={`px-6 py-2 rounded-full font-medium transition-all ${selectedCategory === category
                     ? 'bg-primary-600 text-white shadow-lg'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 {category}
               </button>
@@ -280,9 +161,9 @@ const Products = () => {
                   <div className="flex items-center mb-4">
                     <div className="flex items-center">
                       {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          className={`w-4 h-4 ${i < Math.floor(product.rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${i < Math.floor(product.rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
                         />
                       ))}
                       <span className="ml-1 text-sm font-medium">{product.rating || 0}</span>
@@ -302,11 +183,10 @@ const Products = () => {
                         handleAddToCart(product)
                       }}
                       disabled={product.inStock === false || addingToCart === product.id}
-                      className={`p-3 rounded-lg transition-colors ${
-                        product.inStock !== false
+                      className={`p-3 rounded-lg transition-colors ${product.inStock !== false
                           ? 'bg-primary-600 text-white hover:bg-primary-700'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      }`}
+                        }`}
                     >
                       {addingToCart === product.id ? (
                         <Loader className="w-5 h-5 animate-spin" />
@@ -324,7 +204,7 @@ const Products = () => {
         {!loading && filteredProducts.length === 0 && (
           <div className="text-center py-16">
             <p className="text-xl text-gray-600 mb-4">No products found matching your criteria.</p>
-            <button 
+            <button
               onClick={() => {
                 setSearchQuery('')
                 setSelectedCategory('All')

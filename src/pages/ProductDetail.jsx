@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ShoppingBag, Heart, Star, Minus, Plus, ArrowLeft, Truck, Shield, RefreshCw, Loader } from 'lucide-react'
 import useCartStore from '../store/useCartStore'
-import { productsAPI } from '../utils/api'
+import useAuthStore from '../store/useAuthStore' // Added import
+import { productsAPI, wishlistAPI } from '../utils/api' // Added wishlistAPI
 import toast from 'react-hot-toast'
+import RecommendedProducts from '../components/RecommendedProducts'
+import ProductReviews from '../components/ProductReviews' // Added import
 
 const ProductDetail = () => {
   const { id } = useParams()
   const { addItem, loading: cartLoading } = useCartStore()
-  
+
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -24,36 +27,11 @@ const ProductDetail = () => {
     setLoading(true)
     try {
       const response = await productsAPI.getById(id)
-      setProduct(response.data.product || response.data)
+      setProduct(response.data || response.data.product) // Handle response format flexibility
       setError(null)
     } catch (err) {
       console.error('Error fetching product:', err)
       setError('Failed to load product. Please try again.')
-      // For demo: use mock data if API fails
-      setProduct({
-        id: id,
-        name: 'Midnight Oud',
-        description: 'A luxurious oriental fragrance featuring rich oud wood, warm amber, and exotic spices. This captivating scent opens with bergamot and saffron, developing into a heart of rose and oud, before settling into a base of sandalwood and musk. Perfect for evening occasions and special moments.',
-        price: 45000,
-        comparePrice: 55000,
-        category: 'Men',
-        images: [
-          'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=600',
-          'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=600',
-          'https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=600'
-        ],
-        inStock: true,
-        stockQuantity: 50,
-        rating: 4.5,
-        reviewCount: 120,
-        size: '100ml',
-        notes: {
-          top: ['Bergamot', 'Saffron', 'Pink Pepper'],
-          middle: ['Rose', 'Oud', 'Geranium'],
-          base: ['Sandalwood', 'Musk', 'Amber']
-        },
-        tags: ['oriental', 'woody', 'spicy']
-      })
     } finally {
       setLoading(false)
     }
@@ -78,9 +56,26 @@ const ProductDetail = () => {
     }
   }
 
-  const toggleWishlist = () => {
-    setIsWishlisted(!isWishlisted)
-    toast.success(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist')
+  /* Removed duplicate state declarations */
+
+  const toggleWishlist = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to use wishlist');
+      return;
+    }
+
+    try {
+      if (isWishlisted) {
+        await wishlistAPI.remove(product.id);
+        toast.success('Removed from wishlist');
+      } else {
+        await wishlistAPI.add(product.id);
+        toast.success('Added to wishlist');
+      }
+      setIsWishlisted(!isWishlisted);
+    } catch (error) {
+      toast.error('Failed to update wishlist');
+    }
   }
 
   if (loading) {
@@ -103,15 +98,15 @@ const ProductDetail = () => {
     )
   }
 
-  const images = product.images?.length > 0 
-    ? product.images 
+  const images = product.images?.length > 0
+    ? product.images
     : ['https://images.unsplash.com/photo-1594035910387-fea47794261f?w=600']
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link 
-          to="/products" 
+        <Link
+          to="/products"
           className="inline-flex items-center text-gray-600 hover:text-primary-600 mb-6"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
@@ -135,11 +130,10 @@ const ProductDetail = () => {
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
-                        selectedImage === index 
-                          ? 'border-primary-600' 
-                          : 'border-transparent hover:border-gray-300'
-                      }`}
+                      className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${selectedImage === index
+                        ? 'border-primary-600'
+                        : 'border-transparent hover:border-gray-300'
+                        }`}
                     >
                       <img
                         src={image}
@@ -159,17 +153,16 @@ const ProductDetail = () => {
                 <h1 className="text-3xl font-serif font-bold text-gray-900 mb-4">
                   {product.name}
                 </h1>
-                
+
                 <div className="flex items-center space-x-4 mb-4">
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-5 h-5 ${
-                          i < Math.floor(product.rating || 0)
-                            ? 'text-yellow-400 fill-current'
-                            : 'text-gray-300'
-                        }`}
+                        className={`w-5 h-5 ${i < Math.floor(product.rating || 0)
+                          ? 'text-yellow-400 fill-current'
+                          : 'text-gray-300'
+                          }`}
                       />
                     ))}
                     <span className="ml-2 text-gray-600">
@@ -263,11 +256,10 @@ const ProductDetail = () => {
                   </button>
                   <button
                     onClick={toggleWishlist}
-                    className={`p-4 rounded-lg border-2 transition-colors ${
-                      isWishlisted
-                        ? 'bg-red-50 border-red-200 text-red-600'
-                        : 'border-gray-300 text-gray-600 hover:border-red-200 hover:text-red-600'
-                    }`}
+                    className={`p-4 rounded-lg border-2 transition-colors ${isWishlisted
+                      ? 'bg-red-50 border-red-200 text-red-600'
+                      : 'border-gray-300 text-gray-600 hover:border-red-200 hover:text-red-600'
+                      }`}
                   >
                     <Heart className={`w-6 h-6 ${isWishlisted ? 'fill-current' : ''}`} />
                   </button>
@@ -294,9 +286,12 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
+
+        <ProductReviews productId={id} />
+
+        <RecommendedProducts />
       </div>
     </div>
   )
 }
-
 export default ProductDetail
