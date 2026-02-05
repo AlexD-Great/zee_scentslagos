@@ -16,6 +16,8 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
+import CheckoutSuccess from './pages/CheckoutSuccess'
+import Wishlist from './pages/Wishlist'
 import Dashboard from './pages/Dashboard'
 
 function App() {
@@ -58,11 +60,13 @@ function App() {
             <Route path="/ai-finder" element={<AIFragranceFinder />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProducts />} />
-            <Route path="/crypto-payment" element={<CryptoPayment />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/checkout/success" element={<CheckoutSuccess />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/crypto-payment" element={<CryptoPayment />} />
             <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
         </main>
