@@ -17,16 +17,22 @@ const Contact = () => {
     })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    alert('Thank you for your message! We will get back to you soon.')
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      subject: '',
-      message: ''
-    })
+    try {
+      await contactAPI.send(formData)
+      toast.success('Message sent successfully!')
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: ''
+      })
+    } catch (error) {
+      console.error('Error sending message:', error)
+      toast.error('Failed to send message. Please try again.')
+    }
   }
 
   const contactInfo = [
@@ -69,7 +75,7 @@ const Contact = () => {
                 Send Us a Message
               </h2>
               <p className="text-gray-600 mb-8">
-                Have a question or need assistance? Fill out the form below and our team will 
+                Have a question or need assistance? Fill out the form below and our team will
                 get back to you within 24 hours.
               </p>
 
@@ -189,7 +195,7 @@ const Contact = () => {
               <div className="mt-8 p-6 bg-gradient-to-br from-primary-600 to-primary-800 text-white rounded-xl">
                 <h3 className="text-xl font-semibold mb-3">Need Immediate Assistance?</h3>
                 <p className="text-primary-100 mb-4">
-                  Our customer support team is available during business hours to help with 
+                  Our customer support team is available during business hours to help with
                   any urgent inquiries.
                 </p>
                 <button className="bg-white text-primary-700 px-6 py-3 rounded-lg font-medium hover:bg-primary-50 transition-colors">
@@ -231,7 +237,7 @@ const Contact = () => {
                 How do I know the perfumes are authentic?
               </summary>
               <p className="mt-3 text-gray-600">
-                All our products come with certificates of authenticity and are sourced directly 
+                All our products come with certificates of authenticity and are sourced directly
                 from authorized distributors. We guarantee 100% genuine products.
               </p>
             </details>
@@ -240,7 +246,7 @@ const Contact = () => {
                 What is your return policy?
               </summary>
               <p className="mt-3 text-gray-600">
-                We offer a 7-day return policy for unopened products. If you're not satisfied, 
+                We offer a 7-day return policy for unopened products. If you're not satisfied,
                 you can return or exchange the product within 7 days of purchase.
               </p>
             </details>
@@ -249,7 +255,7 @@ const Contact = () => {
                 Do you offer delivery services?
               </summary>
               <p className="mt-3 text-gray-600">
-                Yes! We deliver across Nigeria. Delivery times vary by location, typically 
+                Yes! We deliver across Nigeria. Delivery times vary by location, typically
                 2-5 business days within Lagos and 3-7 days for other states.
               </p>
             </details>
