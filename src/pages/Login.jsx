@@ -7,9 +7,9 @@ import useCartStore from '../store/useCartStore'
 const Login = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, loading } = useAuthStore()
+  const { login, loginWithGoogle, loading } = useAuthStore()
   const { syncCart } = useCartStore()
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -146,6 +146,7 @@ const Login = () => {
             <div className="mt-6 grid grid-cols-2 gap-3">
               <button
                 type="button"
+                onClick={() => loginWithGoogle().then(success => success && navigate(from, { replace: true }))}
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
