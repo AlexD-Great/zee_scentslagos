@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { 
-  Plus, Edit2, Trash2, Upload, X, Save, Loader, Search, 
+import {
+  Plus, Edit2, Trash2, Upload, X, Save, Loader, Search,
   Package, DollarSign, Image as ImageIcon, AlertTriangle,
   ArrowLeft, Eye, EyeOff
 } from 'lucide-react'
@@ -12,7 +12,7 @@ const AdminProducts = () => {
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuthStore()
   const fileInputRef = useRef(null)
-  
+
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -20,7 +20,7 @@ const AdminProducts = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [uploading, setUploading] = useState(false)
-  
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -54,54 +54,17 @@ const AdminProducts = () => {
   const fetchProducts = async () => {
     setLoading(true)
     try {
-      // Try to fetch from API
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
       const response = await fetch(`${API_URL}/products`)
       if (response.ok) {
         const data = await response.json()
-        setProducts(data.products || data || [])
+        setProducts(data.products || [])
       } else {
-        throw new Error('API not available')
+        throw new Error('Failed to fetch products')
       }
     } catch (error) {
-      console.log('Using local storage for products')
-      // Use localStorage for demo/development
-      const storedProducts = localStorage.getItem('adminProducts')
-      if (storedProducts) {
-        setProducts(JSON.parse(storedProducts))
-      } else {
-        // Initialize with some demo products
-        const demoProducts = [
-          {
-            id: '1',
-            name: 'Midnight Oud',
-            description: 'A luxurious oriental fragrance with rich oud wood and warm amber.',
-            price: 45000,
-            comparePrice: 55000,
-            category: 'Men',
-            size: '100ml',
-            stockQuantity: 50,
-            images: ['https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400'],
-            inStock: true,
-            featured: true
-          },
-          {
-            id: '2',
-            name: 'Rose Elegance',
-            description: 'An elegant floral fragrance with Bulgarian rose and jasmine.',
-            price: 38000,
-            comparePrice: 45000,
-            category: 'Women',
-            size: '50ml',
-            stockQuantity: 30,
-            images: ['https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400'],
-            inStock: true,
-            featured: true
-          }
-        ]
-        setProducts(demoProducts)
-        localStorage.setItem('adminProducts', JSON.stringify(demoProducts))
-      }
+      console.error('Error fetching products:', error)
+      toast.error('Failed to load products')
     } finally {
       setLoading(false)
     }
@@ -113,7 +76,7 @@ const AdminProducts = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
-    
+
     if (name.startsWith('notes.')) {
       const noteType = name.split('.')[1]
       setFormData(prev => ({
@@ -136,7 +99,7 @@ const AdminProducts = () => {
     if (files.length === 0) return
 
     setUploading(true)
-    
+
     try {
       const imagePromises = files.map(file => {
         return new Promise((resolve, reject) => {
@@ -148,12 +111,12 @@ const AdminProducts = () => {
       })
 
       const base64Images = await Promise.all(imagePromises)
-      
+
       setFormData(prev => ({
         ...prev,
         images: [...prev.images, ...base64Images]
       }))
-      
+
       toast.success(`${files.length} image(s) uploaded`)
     } catch (error) {
       toast.error('Failed to upload images')
@@ -206,7 +169,7 @@ const AdminProducts = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!formData.name || !formData.price) {
       toast.error('Name and price are required')
       return
@@ -225,48 +188,61 @@ const AdminProducts = () => {
     }
 
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
       if (editingProduct) {
-        // Update existing product
-        const updatedProducts = products.map(p => 
-          p.id === editingProduct.id ? { ...productData, id: editingProduct.id } : p
-        )
-        setProducts(updatedProducts)
-        saveProductsToStorage(updatedProducts)
+        await fetch(`${API_URL}/products/${editingProduct.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData)
+        })
         toast.success('Product updated successfully')
       } else {
-        // Create new product
-        const newProduct = {
-          ...productData,
-          id: Date.now().toString(),
-          createdAt: new Date().toISOString()
-        }
-        const updatedProducts = [...products, newProduct]
-        setProducts(updatedProducts)
-        saveProductsToStorage(updatedProducts)
+        await fetch(`${API_URL}/products`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData)
+        })
         toast.success('Product created successfully')
       }
-      
+
+      fetchProducts()
       setShowModal(false)
       resetForm()
     } catch (error) {
+      console.error('Error saving product:', error)
       toast.error('Failed to save product')
     }
   }
 
-  const handleDelete = (productId) => {
-    const updatedProducts = products.filter(p => p.id !== productId)
-    setProducts(updatedProducts)
-    saveProductsToStorage(updatedProducts)
-    setDeleteConfirm(null)
-    toast.success('Product deleted successfully')
+  const handleDelete = async (productId) => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      await fetch(`${API_URL}/products/${productId}`, { method: 'DELETE' })
+      toast.success('Product deleted successfully')
+      fetchProducts()
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      toast.error('Failed to delete product')
+    } finally {
+      setDeleteConfirm(null)
+    }
   }
 
-  const toggleStock = (productId) => {
-    const updatedProducts = products.map(p => 
-      p.id === productId ? { ...p, inStock: !p.inStock } : p
-    )
-    setProducts(updatedProducts)
-    saveProductsToStorage(updatedProducts)
+  const toggleStock = async (product) => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      await fetch(`${API_URL}/products/${product.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inStock: !product.inStock })
+      })
+      toast.success('Stock status updated')
+      fetchProducts()
+    } catch (error) {
+      console.error('Error updating stock:', error)
+      toast.error('Failed to update stock')
+    }
   }
 
   const formatPrice = (price) => {
@@ -293,8 +269,8 @@ const AdminProducts = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link 
-          to="/admin" 
+        <Link
+          to="/admin"
           className="inline-flex items-center text-gray-600 hover:text-primary-600 mb-6"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
@@ -427,12 +403,11 @@ const AdminProducts = () => {
                       <td className="px-6 py-4 text-gray-600">{product.stockQuantity || 0}</td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => toggleStock(product.id)}
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                            product.inStock !== false
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
+                          onClick={() => toggleStock(product)}
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${product.inStock !== false
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                            }`}
                         >
                           {product.inStock !== false ? (
                             <>
