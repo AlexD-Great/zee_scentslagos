@@ -117,4 +117,8 @@ export const contactAPI = {
   send: (messageData) => api.post('/contact', messageData),
 }
 
+export const aiAPI = {
+  getRecommendations: (data) => api.post('/ai/recommendations', data),
+}
+
 export default api
