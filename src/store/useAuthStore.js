@@ -184,12 +184,13 @@ const useAuthStore = create(
       forgotPassword: async (email) => {
         set({ loading: true, error: null })
         try {
-          await authAPI.forgotPassword(email)
+          await sendPasswordResetEmail(auth, email)
           set({ loading: false })
           toast.success('Password reset link sent to your email')
           return true
         } catch (error) {
-          const message = error.response?.data?.message || 'Request failed'
+          console.error("Forgot password error", error)
+          const message = error.message || 'Failed to send reset email'
           set({ error: message, loading: false })
           toast.error(message)
           return false

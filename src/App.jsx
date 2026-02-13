@@ -19,6 +19,7 @@ import Checkout from './pages/Checkout'
 import CheckoutSuccess from './pages/CheckoutSuccess'
 import Wishlist from './pages/Wishlist'
 import Dashboard from './pages/Dashboard'
+import ForgotPassword from './pages/ForgotPassword'
 
 function App() {
   return (
@@ -68,6 +69,7 @@ function App() {
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/crypto-payment" element={<CryptoPayment />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
           </Routes>
         </main>
         <Footer />
